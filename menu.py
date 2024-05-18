@@ -130,7 +130,7 @@ class Menu:
 
     def play(self):
         pygame.quit()
-        os.system('python main.py')
+        os.system('python gameplay.py')
 
     def run(self):
         running = True
