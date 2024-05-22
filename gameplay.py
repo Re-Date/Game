@@ -15,19 +15,49 @@ pygame.display.set_caption("game")
 clock = pygame.time.Clock()
 FPS = 60
 
-texture_image = pygame.image.load("./assets/texture_space.jpg")
+pygame.mixer.init()
 
-
+pygame.mixer.music.load('./assets/ISOLATION.mp3')
+pygame.mixer.music.play(-1)
 
 player_radius = 10
-player_x = HEIGHT // 2
-player_y = WIDTH // 2
+player_x = WIDTH // 2
+player_y = HEIGHT // 2
 player_speed = 5
 
 enemy_count = 10
 enemy_radius = 50
-enemies_x = [random.randint(0, WIDTH) for _ in range(enemy_count)]
-enemies_y = [random.randint(0, HEIGHT) for _ in range(enemy_count)]
+enemies_x = []
+e_x = 0
+e_y = 0
+for _ in range(enemy_count):
+    r = random.randint(1,3)
+    if r == 1:
+        e_x = random.randint(0, WIDTH//5)
+        enemies_x.append(e_x)
+    elif r == 2:
+        e_x = random.randint(WIDTH-200, WIDTH)
+        enemies_x.append(e_x)
+    else:
+        random.randint(0, WIDTH)
+        enemies_x.append(e_x)
+enemies_y = []
+
+for x in enemies_x:
+    if x >= 0 and x <= WIDTH//5:
+        e_y = random.randint(0, HEIGHT)
+        enemies_y.append(e_y)
+    elif x >= WIDTH-200 and x <= WIDTH:
+        e_y = random.randint(0, HEIGHT)
+        enemies_y.append(e_y)
+    else:
+        r = random.randint(1,2)
+        if r == 1:
+            e_y = random.randint(0, 150)
+            enemies_y.append(e_y)
+        else:
+            e_y = random.randint(0, HEIGHT-150)
+            enemies_y.append(e_y)
 enemies_speed = 2
 enemies_direction_x = [random.choice(['left', 'right']) for _ in range(enemy_count)]
 enemies_direction_y = [random.choice(['up', 'down']) for _ in range(enemy_count)]
@@ -59,17 +89,33 @@ score = 0
 running = True
 
 class Coin:
-    def __init__(self, x, y, radius):
+    def __init__(self, x, y, radius, texture_path):
         self.x = x
         self.y = y
         self.radius = radius
+        self.texture = pygame.image.load(texture_path).convert_alpha()  # Загружаем текстуру монеты
 
     def draw(self, screen):
-        pygame.draw.circle(screen, (255, 255, 0), (self.x, self.y), self.radius)
+        # Рисуем текстуру монеты
+        coin_rect = self.texture.get_rect(center=(self.x, self.y))
+        screen.blit(self.texture, coin_rect)
 
     def check_collision(self, player_x, player_y, player_radius):
         distance = ((self.x - player_x) ** 2 + (self.y - player_y) ** 2) ** 0.5
         return distance <= self.radius + player_radius
+
+
+# При создании экземпляра монеты укажите путь к изображению монеты
+coin_texture_path = "./assets/coin.png"  # Укажите путь к текстуре монеты
+coins = []
+
+def spawn_coin():
+    x = random.randint(0, WIDTH)
+    y = random.randint(0, HEIGHT)
+    radius = 15
+    coin = Coin(x, y, radius, coin_texture_path)
+    coins.append(coin)
+
 
 coins = []
 coin_spawn_interval = 2.0
@@ -78,33 +124,12 @@ coin_remove_interval = 60.0
 def spawn_coin():
     x = random.randint(0, WIDTH)
     y = random.randint(0, HEIGHT)
-    radius = 5
-    coin = Coin(x, y, radius)
+    radius = 15
+    coin = Coin(x, y, radius, coin_texture_path)  # Передаем путь к текстуре монеты
     coins.append(coin)
 
 coin_spawn_timer = 0
 coin_remove_timer = 0
-
-def generate_enemy_coordinates(player_x, player_y, min_distance):
-    # Генерируем случайные координаты для врага
-    enemy_x = random.randint(0, WIDTH)
-    enemy_y = random.randint(0, HEIGHT)
-
-    # Проверяем расстояние между врагом и игроком
-    distance_to_player = ((player_x - enemy_x) ** 2 + (player_y - enemy_y) ** 2) ** 0.5
-
-    # Если расстояние меньше минимального допустимого, генерируем новые координаты
-    while distance_to_player < min_distance:
-        enemy_x = random.randint(0, WIDTH)
-        enemy_y = random.randint(0, HEIGHT)
-        distance_to_player = ((player_x - enemy_x) ** 2 + (player_y - enemy_y) ** 2) ** 0.5
-
-    return enemy_x, enemy_y
-
-# Используем функцию generate_enemy_coordinates для генерации координат врагов
-for i in range(enemy_count):
-    enemies_x[i], enemies_y[i] = generate_enemy_coordinates(player_x, player_y, player_radius + enemy_radius)
-
 
 while running:
     
@@ -173,7 +198,8 @@ while running:
         coin_spawn_timer = 0
 
     if coin_remove_timer >= coin_remove_interval:
-        coins.clear()
+        if len(coins) >= 1:
+            coins.pop(1)
         coin_remove_timer = 0
     
     
@@ -201,11 +227,15 @@ while running:
 
     # Отображаем время в углу окна
     font = pygame.font.SysFont("Comic Sans", 36)
+    music_font = pygame.font.SysFont("Comic Sans", 10)
     time_text = font.render(f"Время: {int(current_time)}", True, WHITE)
     screen.blit(time_text, (10, 10))
 
     score_text = font.render(f"Счёт: {int(score)}", True, WHITE)
     screen.blit(score_text, (850, 10))
+
+    music_text = music_font.render(f"Играет: Nighthawk22 – Isolation", True, WHITE)
+    screen.blit(music_text, (10, 780))
 
     pygame.display.update()
 

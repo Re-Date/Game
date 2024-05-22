@@ -73,6 +73,11 @@ import sys
 import pygame
 import os
 
+pygame.mixer.init()
+
+pygame.mixer.music.load('./assets/UNKNOWN_MENU_SONG.mp3')
+pygame.mixer.music.play(-1)
+
 class Button:
     def __init__(self, text, font, color, x, y, width, height):
         self.text = text
